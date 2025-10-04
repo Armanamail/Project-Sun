@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ProjectShamsi</RootNamespace>
+    <AssemblyName>ProjectShamsi</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Office.Interop.MSProject" Version="15.0.4797.1004" />
+  </ItemGroup>
+</Project>

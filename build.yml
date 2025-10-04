@@ -1,0 +1,46 @@
+name: Build Add-in, ZIP and MSI
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Install WiX Toolset
+        run: choco install wixtoolset -y
+
+      - name: Restore NuGet packages
+        run: dotnet restore ProjectShamsi.sln
+
+      - name: Build solution
+        run: msbuild ProjectShamsi.sln /p:Configuration=Release
+
+      - name: Prepare artifact dir
+        run: if (!(Test-Path artifact)) { New-Item -ItemType Directory -Path artifact }
+
+      - name: Package bin zip
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [IO.Compression.ZipFile]::CreateFromDirectory('src/ProjectShamsi/bin/Release', 'artifact/ProjectShamsi-bin.zip')
+
+      - name: Build MSI (WiX)
+        env:
+          WIX: 'C:\Program Files (x86)\WiX Toolset v3.11\bin'
+        run: |
+          "%WIX%\candle.exe" -o artifact/ProjectShamsi.wixobj installer/Product.wxs -d"ProjectShamsi.TargetDir=src\ProjectShamsi\bin\Release"
+          "%WIX%\light.exe" -o artifact/ProjectShamsi.msi artifact/ProjectShamsi.wixobj
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProjectShamsi-artifacts
+          path: artifact/
